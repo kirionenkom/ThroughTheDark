@@ -2,8 +2,8 @@
 
 public interface ICreature
 {
-    string GetImageFileName();
+    string GetImageName();
     int GetDrawingPriority();
-    void Move(int dx, int dy);
-    bool DeadInConflict(ICreature conflictedObject);
+    Command Move(int x, int y);
+    bool InConflict(ICreature? otherCreature);
 }

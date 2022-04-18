@@ -5,25 +5,54 @@ public static class Map
     public const int CellSize = 50;
     public static int Width => 25;
     public static int Height => 15;
+    public static ICreature?[,] MapState = ParseLevel(Levels.Level1);
     
-    public static MapCell[,] MapState = ParseLevel(Levels.Level1);
-    public static Player Player = new();
-    
-    
+    public static Keys KeyPressed;
+    public static HashSet<Keys> PressedKeys = new();
 
-    public static bool IsWall(int x, int y) => MapState[y, x] == MapCell.Wall;
-    
-    private static MapCell[,] ParseLevel(string level)
+    public static bool IsWall(int x, int y)
+    {
+        if (MapState[y, x] == null) return false;
+        return MapState[y, x]!.GetImageName() == "wall";
+    }
+
+    public static bool IsWall(Point point)
+    {
+        return IsWall(point.X, point.Y);
+    }
+
+    public static bool InBounds(int x, int y)
+    {
+        return x > 0 && x < Width && y > 0 && y < Height;
+    }
+
+    public static bool InBounds(Point point)
+    {
+        return InBounds(point.X, point.Y);
+    }
+
+    private static ICreature?[,] ParseLevel(string level)
     {
         var l = level.Split('\n');
-        var map = new MapCell[Height, Width];
-        for (var i = 0; i < Height; i++)
-        for (var j = 0; j < Width; j++)
+        var map = new ICreature?[Height, Width];
+        for (var y = 0; y < Height; y++)
+        for (var x = 0; x < Width; x++)
         {
-            if (l[i][j] == 'W')
-                map[i, j] = MapCell.Wall;
-            else
-                map[i, j] = MapCell.Empty;
+            switch (l[y][x])
+            {
+                case 'W':
+                    map[y, x] = new Wall();
+                    break;
+                case 'P':
+                    map[y, x] = new Player(x, y);
+                    break;
+                case 'E':
+                    map[y, x] = new Enemy(x, y);
+                    break;
+                default:
+                    map[y, x] = null;
+                    break;
+            }
         }
 
         return map;

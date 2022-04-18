@@ -1,86 +1,52 @@
 using System.Drawing.Drawing2D;
+using Timer = System.Windows.Forms.Timer;
 
 namespace MyGame;
 
 public partial class GameWindow : Form
 {
-    public readonly ImagesFiles Images = new ();
-    private int playerTime = 0;
+    private readonly ImagesFiles Images = new();
+    private static List<Animation> Animations = new();
+    private static int timerCount = 0;
+
     public GameWindow()
     {
         ClientSize = new Size(Map.Width * Map.CellSize, (Map.Height + 1) * Map.CellSize);
         StartPosition = FormStartPosition.CenterScreen;
-        
+
         var statusBar = new PictureBox
         {
-            Image = Images.StatusBar,
+            Image = Images.Bitmaps["statusBar"],
             Size = new Size(ClientSize.Width, Map.CellSize)
         };
         Controls.Add(statusBar);
-        
-        Paint += (sender, args) => PaintLevel(args);
-        Paint -= (sender, args) => PaintLevel(args);
-        Paint += (sender, args) => PaintPlayer(args); 
+
+        var timer = new Timer();
+        timer.Interval = 20;
+        timer.Tick += TimerTick;
+        timer.Start();
     }
-    
+
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
         Text = "MyGame";
         DoubleBuffered = true;
-        Icon = Images.Icon;
-        BackgroundImage = Images.Background;
+        Icon = ImagesFiles.Icon;
+        BackgroundImage = Images.Bitmaps["BackgroundImage"];
         MaximizeBox = false;
         FormBorderStyle = FormBorderStyle.Fixed3D;
     }
-    
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        base.OnKeyDown(e);
-        var startLocation = new Point(Map.Player.X * Map.CellSize, Map.Player.Y * Map.CellSize);
-        switch (e.KeyCode)
-        {
-            case Keys.W:
-                Map.Player.Move(0, -1);
-                break;
-            case Keys.A:
-                Map.Player.Move(-1, 0);
-                break;
-            case Keys.S:
-                Map.Player.Move(0, 1);
-                break;
-            case Keys.D:
-                Map.Player.Move(1, 0);
-                break;
-        }
+        Map.PressedKeys.Add(e.KeyCode);
+        Map.KeyPressed = e.KeyCode;
+    }
 
-        Invalidate();
-    }
-    
-    private void PaintPlayer(PaintEventArgs e)
+    protected override void OnKeyUp(KeyEventArgs e)
     {
-        e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-        e.Graphics.DrawImage(Images.Player,  
-            new Rectangle(
-                new Point(Map.Player.X * Map.CellSize,(Map.Player.Y + 1) * Map.CellSize),
-                new Size(Map.CellSize, Map.CellSize)));
-    }
-    
-    private void PaintLevel(PaintEventArgs e)
-    {
-        e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-        for (var i = 0; i < Map.Height; i++)
-        {
-            for (var j = 0; j < Map.Width; j++)
-            {
-                if (Map.MapState[i, j] == MapCell.Wall)
-                    e.Graphics.DrawImage
-                    (Images.Walls, new Rectangle
-                    (j * Map.CellSize,
-                        (i + 1) * Map.CellSize,
-                        Map.CellSize,
-                        Map.CellSize));
-            }
-        }
+        Map.PressedKeys.Remove(e.KeyCode);
+        Map.KeyPressed = Map.PressedKeys.Any() ? Map.PressedKeys.First() : Keys.None;
     }
 }

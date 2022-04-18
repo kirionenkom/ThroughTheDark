@@ -1,29 +1,68 @@
-﻿namespace MyGame;
+﻿using Microsoft.VisualBasic.Devices;
+using Timer = System.Windows.Forms.Timer;
+
+namespace MyGame;
 
 public class Player : ICreature
 {
-    public int X { get; private set; }
-    public int Y { get; private set; }
+    private  int X;
+    private int Y;
+    public Point GazeDirection { get; private set; }
 
-    public Player()
+    public Player(int x, int y)
     {
-        X = 1;
-        Y = 13;
+        X = x;
+        Y = y;
+        GazeDirection = new Point(1, 0);
+        var playerTimer = new Timer();
+        playerTimer.Interval = 10;
+        playerTimer.Tick += (sender, args) => Shoot(X, Y);
+        playerTimer.Start();
     }
+
+    public Point GetPosition() => new(X, Y);
     
-    public string GetImageFileName() => "player.png";
+    public string GetImageName() => "player";
 
     public int GetDrawingPriority() => 1;
 
-    public void Move(int dx, int dy)
+    public Command Move(int x, int y)
     {
-        if (Map.IsWall(X + dx, Y + dy)) return;
-        X += dx;
-        Y += dy;
+        var dx = 0;
+        var dy = 0;
+        switch (Map.KeyPressed)
+        {
+            case Keys.W:
+                dy--;
+                GazeDirection = new Point(0, -1);
+                Y--;
+                break;
+            case Keys.A:
+                dx--;
+                X--;
+                GazeDirection = new Point(-1, 0);
+                break;
+            case Keys.S:
+                dy++;
+                Y++;
+                GazeDirection = new Point(0, 1);
+                break;
+            case Keys.D:
+                dx++;
+                X++;
+                GazeDirection = new Point(1, 0);
+                break;
+        }
+        
+        return Map.IsWall(x + dx, y + dy) ? new Command() 
+            : new Command(dx, dy);
     }
-    
-    public bool DeadInConflict(ICreature conflictedObject)
+
+    public bool InConflict(ICreature? otherCreature) => false;
+
+    public void Shoot(int x, int y)
     {
-        throw new NotImplementedException();
+        if (Map.KeyPressed == Keys.Space)
+            Map.MapState[y + GazeDirection.Y, x + GazeDirection.X] = new Projectile(GazeDirection);
     }
 }
