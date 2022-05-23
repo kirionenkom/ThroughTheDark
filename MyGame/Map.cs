@@ -11,7 +11,7 @@ public static class Map
     public static int Height => 11;
 
     private static int _lastPlayerHealth = 100;
-    public static int CurrentLevel { get; private set; } = 6;
+    public static int CurrentLevel { get; private set; }
     public static int AliveEnemies;
     private static bool _cardIsTaken;
     private static IEntity[,] _mapState = ParseLevel(Levels.LevelsFiles[CurrentLevel]);
